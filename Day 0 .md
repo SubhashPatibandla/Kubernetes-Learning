@@ -22,26 +22,9 @@ They’re complementary, not mutually exclusive. In fact Kubernetes uses Docker/
 
 ## Kubernetes Architecture :
 
-                +---------------------------+
-                |     Control Plane          |
-                |---------------------------|
- kubectl  --->  | API Server                 |
-                | etcd (state store)         |
-                | Controller Manager         |
-                | Scheduler                  |
-                +---------------------------+
-                           |
-       ----------------------------------------------------
-       |                     |                     |
-+--------------+     +--------------+      +--------------+
-| Worker Node1 |     | Worker Node2 |      | Worker Node3 |
-|--------------|     |--------------|      |--------------|
-| kubelet      |     | kubelet      |      | kubelet      |
-| kube-proxy   |     | kube-proxy   |      | kube-proxy   |
-| containerd   |     | containerd   |      | containerd   |
-| Pods/Containers|   | Pods/Containers|    | Pods/Containers|
-+--------------+     +--------------+      +--------------+
+ <pre> ```text +---------------------------+ | Control Plane | |---------------------------| kubectl ---> | API Server | | etcd (state store) | | Controller Manager | | Scheduler | +---------------------------+ | ---------------------------------------------------- | | | +--------------+ +--------------+ +--------------+ | Worker Node1 | | Worker Node2 | | Worker Node3 | |--------------| |--------------| |--------------| | kubelet | | kubelet | | kubelet | | kube-proxy | | kube-proxy | | kube-proxy | | containerd | | containerd | | containerd | | Pods/Containers| | Pods/Containers| | Pods/Containers| +--------------+ +--------------+ +--------------+ ``` </pre>
 
+ 
 ## Control Plane
 
 | Component              | Role                                                                        |
