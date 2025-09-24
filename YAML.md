@@ -78,6 +78,10 @@ c) Nested Objects
 address:           # <-- nested object
   city: Hyderabad
   country: India
+  Phone :
+    ph1:
+    ph2
+    
 
 
 d) Lists of Objects
