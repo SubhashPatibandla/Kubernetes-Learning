@@ -91,19 +91,20 @@ employees:        # <-- list of objects
 
 e) Comments
 
-# This is a comment
+#This is a comment
 app: nginx
 
-Example : 
-apiVersion: v1          # Kubernetes API version for Pod
-kind: Pod               # Resource type: Pod
-metadata:               # Metadata = identifying information
-  name: nginx-pod       # Pod name (must be unique in namespace)
-  labels:               # Labels help identify and group objects
+# Example : 
+apiVersion: v1                # Kubernetes API version for Pod
+kind: Pod                     # Resource type: Pod
+metadata:                     # Metadata = identifying information
+  name: nginx-pod             # Pod name (must be unique in namespace)
+  labels:                     # Labels help identify and group objects
     app: nginx
-spec:                   # Specification of the pod
-  containers:           # List of containers in this pod
-    - name: nginx       # Container name
-      image: nginx:latest # Docker image to use
-      ports:            # List of ports exposed by this container
-        - containerPort: 80  # Port on which container listens
+spec:                         # Specification of the pod
+  containers:                 # List of containers in this pod
+    - name: nginx             # Container name
+      image: nginx:latest     # Docker image to use
+      ports:                  # List of ports exposed by this container
+        - containerPort: 80   # Port on which container listens
+
