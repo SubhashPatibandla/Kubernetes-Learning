@@ -16,7 +16,7 @@ Supported by most DevOps tools
 
 👉 Think of it like a settings file written in plain English style.
 
-<img width="817" height="491" alt="image" src="https://github.com/user-attachments/assets/bdb0eeba-ac09-42ea-a537-4ca1670f58e0" />
+
 
 # 2. YAML vs JSON
 Feature	      JSON	          YAML
@@ -42,6 +42,8 @@ skills:
   - Docker
   - Kubernetes
   - Terraform
+
+<img width="817" height="491" alt="image" src="https://github.com/user-attachments/assets/bdb0eeba-ac09-42ea-a537-4ca1670f58e0" />
 
 # 3. YAML Use Cases in a DevOps Engineer Role
 
