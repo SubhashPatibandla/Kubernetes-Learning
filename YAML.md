@@ -94,7 +94,9 @@ e) Comments
 #This is a comment
 app: nginx
 
-# Example : 
+### Example: Kubernetes Pod Manifest with Explanations
+
+```yaml
 apiVersion: v1                # Kubernetes API version for Pod
 kind: Pod                     # Resource type: Pod
 metadata:                     # Metadata = identifying information
@@ -107,4 +109,5 @@ spec:                         # Specification of the pod
       image: nginx:latest     # Docker image to use
       ports:                  # List of ports exposed by this container
         - containerPort: 80   # Port on which container listens
+
 
