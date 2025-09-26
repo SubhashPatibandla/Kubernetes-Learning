@@ -103,12 +103,12 @@ sudo mv kubectl /usr/local/bin/
 # Verify
 kubectl version --client
 
-# Start Minikube without VM driver
-minikube start --driver=none
+# Start Minikube with VM driver as docker
+minikube start --driver=docker --memory=2048mb --cpus=2
 
 # When you start Minikube with:
 
-minikube start --driver=none
+minikube start --driver=docker
 
 It automatically creates the kubeconfig file at:
 ~/.kube/config
@@ -136,17 +136,29 @@ spec:
         - containerPort: 80
 
 3. Use the command kubectl create or apply as below :
+   
    kubectl create -f pod.yml
-4. To get pods & Pods details:
+   
+5. To get pods & Pods details:
+   
    kubectl get pods
+   
    kubectl get pods -o wide
-5. To SSH into minikube, use the below command , so that you will login to cluster :
+   
+7. To SSH into minikube, use the below command , so that you will login to cluster :
+   
    minikube ssh
-6. To check the pod is running or not, copy the IP address of POD -o wide and run the below command :
+   
+9. To check the pod is running or not, copy the IP address of POD -o wide and run the below command :
+    
    curl 172.18.0.3
-7. You can delete pod , view logs, describe :
+   
+11. You can delete pod , view logs, describe :
+    
    kubectl delete pod nginx
+   
    kubectl describe pod nginx
+   
    kubectl logs nginx
 
 ### You can get all these kubectl commands from kubectl cheatsheet.
@@ -156,7 +168,9 @@ spec:
 # difference between container, pod & deployment :
 
 Container : Think of a container as a single app running inside a box (e.g., one copy of Nginx web server).
+
 Pod: If a container is one app, a Pod is a package/room that can hold one or a few tightly connected apps (like Nginx + sidecar container for logging).
+
 Deployment : the manager that ensures you always have enough workers on duty, replaces them if they quit, and updates them smoothly.
 
 # Deployment
@@ -167,11 +181,11 @@ Ensures the desired number of Pods are always running (self-healing, scaling, ro
 
 If a Pod crashes, Deployment creates a new one automatically.
      
-# A Deployment in Kubernetes is like a wrapper that manages ReplicaSets, and ReplicaSets manage Pods.
+A Deployment in Kubernetes is like a wrapper that manages ReplicaSets, and ReplicaSets manage Pods.
      
 Deployment does not directly create Pods → it creates a ReplicaSet.
 
-🔹 ReplicaSet
+# ReplicaSet
 
 Ensures that the specified number of Pods are running at all times, like a controller.
 
@@ -179,7 +193,7 @@ If one Pod crashes, ReplicaSet will create a new Pod.
 
 Deployment manages ReplicaSets → whenever you update the Deployment, it may create a new ReplicaSet (for the new version of Pods) and gradually scale down the old one.
 
-🔹 Pod
+# Pod
 
 The actual running unit on a Node.
 
@@ -190,19 +204,28 @@ Pod runs containers (usually one main container, optionally sidecars).
 # Flow of Deployment.yml:
 
 Deployment 
+
    ↓
+   
 Creates & manages ReplicaSet 
+
    ↓
+   
 ReplicaSet ensures Pods are running 
+
    ↓
+   
 Pods run containers
+
 
 Before going to demo, delete the existing pods available in minikube using kubectl delete pod nginx
 
 Now, check once for all the pods/deployments inside of cluster :
+
 kubectl get all or kubectl get all -a
 
 Create a deployment and paste the below yaml file :
+
 vi deployment.yml
 
 apiVersion: apps/v1
@@ -230,16 +253,20 @@ spec:
 # kubectl apply -f deployment.yml
 
 Check whether deployment is create or not using below command:
+
 kubectl get deploy 
+
 kubectl get rs(to check replica set controller created or not)
+
 kubectl get pods( as deployment.yml will creats pods)
 
-# Now delete pod and check whether replicaset is trying to create pod again to match the desired state. This is called Auto Healing .
+Now delete pod and check whether replicaset is trying to create pod again to match the desired state. This is called Auto Healing .
 
 kubectl delete pod nginx-name
-# Open in another terminal -- kubectl get pods -w ( to see the what is happening to the pod while it is getting deleted).
 
-# Now change the replicas to 3 in yaml file and apply once again, now check for the pods created . You can see 3 pods deployed.
+Open in another terminal -- kubectl get pods -w ( to see the what is happening to the pod while it is getting deleted).
+
+Now change the replicas to 3 in yaml file and apply once again, now check for the pods created . You can see 3 pods deployed.
 
 
 
