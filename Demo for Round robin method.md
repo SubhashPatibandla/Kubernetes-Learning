@@ -6,6 +6,8 @@ Here’s a complete minimal demo you can run locally (Minikube/kind) or on a clo
 
 We’ll run two replicas of a tiny web server that returns its pod name. That way you can see round-robin working.
 
+-->Before copying the below yaml code, makesure you're in edit mode of this github file, so that you can understand the proper format of YAML.
+
 deployment.yaml:
 
 apiVersion: apps/v1
