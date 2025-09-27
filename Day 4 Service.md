@@ -1,7 +1,6 @@
+### For each Deployment, we need Service to be attached.
 
-1. For each Deployment, we need Service to be attached.
-
-What is the need of Service.Yaml ?
+# What is the need of Service.Yaml ?
 
 We dont have service now and what are the issues we face ?
 
@@ -27,7 +26,7 @@ We dont have service now and what are the issues we face ?
 
    So that, we dont need to bother about IP addresses, if Labels and selectors are in Place.
 
-# check the Deployment.yml and Service.yml now to cross check the name of the App in labels and selectors
+check the Deployment.yml and Service.yml now to cross check the name of the App in labels and selectors
 
 3. Service are classified into 3 types :
 
@@ -246,6 +245,7 @@ even this IP address cannot able to accessible, as this is just simulated by min
 On EC2, that "external IP" is inside the EC2 instance’s network, not automatically a public internet IP.
    
 
+Check the "Demo for Round Robin Method if interested"
 
 
    
