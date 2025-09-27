@@ -1,140 +1,101 @@
-Kubernetes Demo Manifest
+# how Kubernetes does round-robin load balancing between pods, configured via a Service defined in service.yaml.
 
-# deployment-service-demo.yaml
+Here’s a complete minimal demo you can run locally (Minikube/kind) or on a cloud cluster.
+
+# 1️⃣ Create a simple web app Deployment
+
+We’ll run two replicas of a tiny web server that returns its pod name. That way you can see round-robin working.
+
+deployment.yaml:
 
 apiVersion: apps/v1
-
 kind: Deployment
-
 metadata:
-
-  name: demo-app
-  
+  name: demo-deployment
 spec:
-
-  replicas: 3
-  
+  replicas: 2
   selector:
-  
     matchLabels:
-    
       app: demo-app
-      
   template:
-  
     metadata:
-    
       labels:
-      
         app: demo-app
-        
     spec:
-    
       containers:
-      
-      - name: demo-container
-      
+      - name: web
         image: hashicorp/http-echo:0.2.3
-        
         args:
-        
-          - "-text=$(POD_NAME)"
-          
+          - "-text=Hello from $(POD_NAME)"
         env:
-        
           - name: POD_NAME
-          
             valueFrom:
-            
               fieldRef:
-              
                 fieldPath: metadata.name
-                
         ports:
-        
         - containerPort: 5678
-        
----
+
+
+This runs hashicorp/http-echo, which echoes a message. We inject the pod name via env to see which pod responds.
+
+# 2️⃣ Create a Service with round-robin load balancing
+
+In Kubernetes, you don’t specify “round-robin” explicitly — ClusterIP or LoadBalancer Services already use round-robin across endpoints by default.
+
+service.yaml:
+
 apiVersion: v1
-
 kind: Service
-
 metadata:
-
   name: demo-service
-  
 spec:
-
+  type: NodePort   # or NodePort if you’re on Minikube without LB
   selector:
-  
     app: demo-app
-    
   ports:
-  
-    - port: 80
-    
-      targetPort: 5678
-      
-  type: ClusterIP
-  
-
-How to Run the Demo
-
-1️⃣ Apply the manifest
-
-kubectl apply -f deployment-service-demo.yaml
+  - protocol: TCP
+    port: 80
+    targetPort: 5678
 
 
-2️⃣ Verify pods are running
+By default, this Service will load balance requests across all pods selected by app: demo-app using round-robin.
 
-kubectl get pods
+3️⃣ Apply the manifests
 
+kubectl apply -f deployment.yaml
 
-You should see something like:
-
-NAME                        READY   STATUS    RESTARTS   AGE
-
-demo-app-7f4b9d8c7c-abcde  1/1     Running   0          1m
-
-demo-app-7f4b9d8c7c-fghij  1/1     Running   0          1m
-
-demo-app-7f4b9d8c7c-klmno  1/1     Running   0          1m
-
-3️⃣ Run a curl loop from inside the cluster
-
-kubectl run curlpod --image=radial/busyboxplus:curl -i --tty --rm -- /bin/sh
+kubectl apply -f service.yaml
 
 
-Inside the pod:
+Check:
 
-while true; do curl demo-service; sleep 1; done
-
-
-You should see output like:
-
-demo-app-7f4b9d8c7c-abcde
-
-demo-app-7f4b9d8c7c-fghij
-
-demo-app-7f4b9d8c7c-klmno
-
-demo-app-7f4b9d8c7c-abcde
-
-demo-app-7f4b9d8c7c-fghij
-
-demo-app-7f4b9d8c7c-klmno
+kubectl get pods -o wide
+kubectl get svc demo-service
 
 
-✅ This clearly shows round-robin load balancing between pods.
+On Minikube you can run:
+
+minikube service demo-service
 
 
-4️⃣ Optional — Check logs of each pod
+to open it in a browser, or use curl:
 
-kubectl logs demo-app-7f4b9d8c7c-abcde
+EXTERNAL_IP=$(minikube service demo-service --url)
 
-kubectl logs demo-app-7f4b9d8c7c-fghij
+Try 1st time : curl $EXTERNAL_IP
+Try 2nd time : curl $EXTERNAL_IP
+Try 3rd time : curl $EXTERNAL_IP
 
-kubectl logs demo-app-7f4b9d8c7c-klmno
+
+You should see alternating responses:
+
+Hello from demo-deployment-6db95d7b47-lc7gm
+
+Hello from demo-deployment-6db95d7b47-bt4z9
+
+Hello from demo-deployment-6db95d7b47-lc7gm
+
+...
 
 
-This will confirm which pod served which request.
+That’s Kubernetes’ built-in round-robin load balancing.
