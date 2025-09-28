@@ -211,4 +211,8 @@ curl http://192.168.49.2/app2
 
 ✅ This proves that Ingress Controller (Nginx) is taking traffic from 192.168.49.2 and routing based on path rules to the correct backend Service.
 
+Note : In production leven, you can mapp IP address and domain name using the command : sudo vim /etc/hosts.
+
+If you complete mapping, then everything will fall into place.
+
 
