@@ -308,4 +308,131 @@ Step	Action
 9	Upgrade / rollback releases
 10	Package chart
 
+#how to rollback your production environment to a previous version using Helm, step-by-step.
+
+
+---
+
+Step 1 — Understand Helm Rollback
+
+When you deploy with Helm, each deployment creates a release version.
+
+Example:
+
+helm install payment ./payment -f values-prod.yaml
+
+creates release version 1.
+
+When you run:
+
+helm upgrade payment ./payment -f values-prod.yaml
+
+Helm creates release version 2, and so on.
+
+Helm keeps track of history for each release so you can rollback.
+
+
+---
+
+Step 2 — Check Release History
+
+Before rolling back, check the history of your release:
+
+helm history payment
+
+Example output:
+
+REVISION    UPDATED                     STATUS      CHART           APP VERSION     DESCRIPTION
+1           Mon Sep 29 08:00:00 2025    deployed    payment-1.0.0   1.0.0           Install complete
+2           Tue Sep 30 10:00:00 2025    deployed    payment-1.1.0   1.1.0           Upgrade complete
+3           Wed Oct 1 12:00:00 2025     deployed    payment-1.2.0   1.2.0           Upgrade complete
+
+Here:
+
+REVISION = release version number
+
+STATUS = deployed version
+
+DESCRIPTION = install/upgrade description
+
+
+
+---
+
+Step 3 — Choose the Version to Rollback
+
+Say your production environment is on revision 3 (payment v1.2.0) and it’s broken.
+You want to go back to revision 2.
+
+
+---
+
+Step 4 — Rollback Command
+
+Run:
+
+helm rollback payment 2
+
+This will:
+
+Revert all Kubernetes resources to the state of revision 2
+
+Deploy v1.1.0 of your payment service
+
+
+
+---
+
+Step 5 — Verify the Rollback
+
+Check rollout status:
+
+kubectl rollout status deployment/payment-service
+
+Check Helm release history again:
+
+helm history payment
+
+You should now see:
+
+REVISION    UPDATED                     STATUS      CHART           APP VERSION     DESCRIPTION
+1           Mon Sep 29 08:00:00 2025    deployed    payment-1.0.0   1.0.0           Install complete
+2           Tue Sep 30 10:00:00 2025    deployed    payment-1.1.0   1.1.0           Upgrade complete
+3           Wed Oct 1 12:00:00 2025     deployed    payment-1.2.0   1.2.0           Upgrade complete
+4           Thu Oct 2 09:00:00 2025     deployed    payment-1.1.0   1.1.0           Rollback to revision 2
+
+Revision 4 = rollback version.
+
+
+---
+
+Step 6 — Rollback to a Specific Chart Version
+
+If you want to roll back not just the release state but also a specific chart version, you must pass the chart and values file:
+
+Example:
+
+helm upgrade payment ./payment --version 1.1.0 -f values-prod.yaml
+
+
+---
+
+⚡ Quick Commands Summary
+
+# Check release history
+helm history payment
+
+# Rollback to specific revision
+helm rollback payment <revision>
+
+# Check rollout status
+kubectl rollout status deployment/payment-service
+
+
+---
+
+💡 Tip: Helm rollback does not remove the failed release, it creates a new release with the previous configuration.
+This means rollbacks are safe and you always have a history to go back to.
+
+
  
