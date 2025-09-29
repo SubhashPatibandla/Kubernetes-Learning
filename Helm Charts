@@ -434,5 +434,212 @@ kubectl rollout status deployment/payment-service
 💡 Tip: Helm rollback does not remove the failed release, it creates a new release with the previous configuration.
 This means rollbacks are safe and you always have a history to go back to.
 
+Now let's see how helm helps to automate the process of Continuous deployment:
+
+
+We’ll go step-by-step as shown below :
+
+
+---
+
+Full Flow — Latest Image Build → Helm → Kubernetes Deployment
+
+
+---
+
+Step 1 — Developer pushes code
+
+A developer pushes new code to the repository (GitHub, GitLab, etc.).
+
+This triggers a CI/CD pipeline automatically.
+
+
+
+---
+
+Step 2 — CI Pipeline builds the Docker image
+
+The CI system (Jenkins, GitHub Actions, GitLab CI, etc.) runs commands like:
+
+docker build -t myrepo/payment-service:$GIT_COMMIT .
+
+Where:
+
+myrepo/payment-service = container repository
+
+$GIT_COMMIT = latest commit hash or build number (unique for every build)
+
+
+Example:
+If commit hash is abc123, image tag = abc123.
+
+
+---
+
+Step 3 — CI Pipeline pushes image to registry
+
+CI pipeline runs:
+
+docker push myrepo/payment-service:$GIT_COMMIT
+
+Now:
+
+Docker registry has myrepo/payment-service:abc123
+
+Kubernetes can pull this image later.
+
+
+
+---
+
+Step 4 — CI/CD pipeline calls Helm with new image tag
+
+Instead of manually editing YAML manifests, CI/CD pipeline runs Helm with the new image tag as a parameter.
+
+Example:
+
+helm upgrade payment ./payment-chart \
+  --set image.tag=$GIT_COMMIT \
+  -f values-prod.yaml
+
+Here:
+
+--set image.tag=$GIT_COMMIT → tells Helm: “use this latest image tag”
+
+values-prod.yaml → environment-specific configuration (replicas, resources, ingress rules)
+
+
+
+---
+
+Step 5 — Helm renders Kubernetes manifests
+
+Inside your Helm chart:
+
+values.yaml contains:
+
+
+image:
+  repository: myrepo/payment-service
+  tag: v1.0.0
+
+deployment.yaml contains:
+
+
+image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+Helm takes:
+
+1. Chart templates (deployment.yaml, service.yaml, etc.)
+
+
+2. Values from values.yaml
+
+
+3. Overrides from --set (e.g., image.tag=abc123)
+
+
+
+Helm renders the final deployment manifest:
+
+image: "myrepo/payment-service:abc123"
+
+
+---
+
+Step 6 — Helm sends manifests to Kubernetes
+
+Helm runs:
+
+kubectl apply -f <rendered-manifest>
+
+Under the hood, Helm sends the new deployment manifests to the Kubernetes API.
+
+Kubernetes compares the current state of the cluster with the new manifests.
+
+
+---
+
+Step 7 — Kubernetes performs a rolling update
+
+Since the image tag changed:
+
+Kubernetes pulls the new image (myrepo/payment-service:abc123)
+
+Creates new pods with the updated image
+
+Gradually replaces old pods (rolling update) → no downtime
+
+Verifies health of new pods before removing old ones
+
+
+Check rollout status:
+
+kubectl rollout status deployment/payment-service
+
+
+---
+
+Step 8 — Helm stores the new release version
+
+Helm keeps deployment history:
+
+helm history payment
+
+Example output:
+
+REVISION    UPDATED                     STATUS      CHART           APP VERSION     DESCRIPTION
+1           Mon Sep 29 08:00:00 2025    deployed    payment-1.0.0   1.0.0           Install complete
+2           Wed Oct 1 12:00:00 2025     deployed    payment-1.2.0   1.2.0           Upgrade complete
+
+Each helm upgrade creates a new release revision → easy to rollback if needed.
+
+
+---
+
+Step 9 — Rollback if needed
+
+If the new version breaks:
+
+helm rollback payment <revision>
+
+Kubernetes reverts to the previous deployment.
+
+
+---
+
+Final Flow Diagram (Text Version)
+
+Developer pushes code
+        ↓
+CI builds Docker image → tags it uniquely (e.g., abc123)
+        ↓
+CI pushes image to container registry
+        ↓
+CI/CD pipeline calls Helm upgrade with new image tag
+        ↓
+Helm renders Kubernetes manifests (deployment.yaml, service.yaml, etc.)
+        ↓
+Helm sends manifests to Kubernetes API
+        ↓
+Kubernetes performs rolling update with the latest image
+        ↓
+Helm stores new release version
+
+
+---
+
+💡 Key advantage:
+With Helm + CI/CD:
+
+No manual YAML changes
+
+Fully automated deployments
+
+Easy rollback
+
+Clear tracking of deployments
+
+
 
  
