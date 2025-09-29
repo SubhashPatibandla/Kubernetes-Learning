@@ -1,0 +1,43 @@
+# What is Helm ?
+
+Helm is a package manager for kubernetes, similar to apt package manager in linux.
+
+usually we run Sudo apt update or sudo apt install nginx or phython3 etc inorder to install packages of nginx or phython3 as required.
+
+similarly helm will help you to download the packages into kubernetes cluster, install them and update them as required.
+
+
+what is repo in helm ?
+
+There are some repositories available in the market which are helpful to get some commonly used charts in order to install , update or delete.
+
+let's say you want to install nginx into one kubernetes cluster.
+
+now first will add the repository to helm by using below command :
+
+helm repo add bitnami.com
+
+after adding the repo, will run the below command to install nginx :
+
+helm install nginxv1 bitnami/nginx
+
+in the above command, nginxv1 is the name of the package you wanted to name with.
+
+bitnami/nginx is like repo/chart which you have downloaded/installed.
+
+-- that's how helm is useful similar to apt in linux.
+
+# then how the helm is useful at real world production level ?
+
+usually we may need different setups at different environments.
+
+so we can't write manifest files again and again for each microservice at every environment like dev, testing and prod.
+
+so in order to make those manifest files reusable, we can update the data of manifest files as variable. 
+
+and we can configure the values in the values.yaml separately for dev, testing and prod.
+
+inorder to get clear understanding, please go through the below steps after writing manifest files for any microservice:
+
+
+ 
