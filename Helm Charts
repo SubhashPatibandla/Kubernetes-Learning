@@ -39,5 +39,273 @@ and we can configure the values in the values.yaml separately for dev, testing a
 
 inorder to get clear understanding, please go through the below steps after writing manifest files for any microservice:
 
+we’ll go step-by-step and start from zero, assuming you only have Kubernetes manifest files for your microservice called payment, and you want to make it into a Helm chart so it’s reusable and easy to deploy.
+
+I’ll explain every step clearly.
+
+
+---
+
+Step 1 — Understand Your Starting Point
+
+You currently have something like this:
+
+payment-deployment.yaml  
+payment-service.yaml  
+payment-ingress.yaml
+
+These are static Kubernetes manifests.
+They work, but:
+
+They’re not reusable for different environments
+
+You can’t easily change configurations without editing files
+
+No versioning or package management
+
+
+Goal → Convert these manifests into a Helm chart.
+
+
+---
+
+Step 2 — Install Helm
+
+Make sure Helm is installed on your system.
+
+helm version
+
+If not installed, follow instructions:
+
+# For Linux
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+Verify:
+
+helm version
+
+
+---
+
+Step 3 — Create a New Chart Directory
+
+Helm has a command to scaffold a chart for you.
+
+helm create payment
+
+This creates:
+
+payment/
+├── Chart.yaml
+├── values.yaml
+├── charts/
+└── templates/
+    ├── deployment.yaml
+    ├── service.yaml
+    ├── ingress.yaml
+    ├── hpa.yaml
+    ├── _helpers.tpl
+
+What these files mean:
+
+Chart.yaml → Chart metadata
+
+values.yaml → Default configuration values (replicas, image, ports, etc.)
+
+templates/ → Kubernetes YAML templates
+
+charts/ → Sub-charts (dependencies)
+
+
+
+---
+
+Step 4 — Copy Your Existing Manifest Content
+
+Open your existing manifests and copy their content into the generated Helm templates.
+
+Example:
+
+Copy payment-deployment.yaml into payment/templates/deployment.yaml
+
+Copy payment-service.yaml into payment/templates/service.yaml
+
+Copy payment-ingress.yaml into payment/templates/ingress.yaml
+
+
+At this point, your Helm chart has exact same manifests as before, but still static (no values replaced).
+
+
+---
+
+Step 5 — Replace Static Values with Variables
+
+We replace fixed values in templates with placeholders that refer to values.yaml.
+
+Example before (deployment.yaml):
+
+replicas: 2
+image: payment-service:v1.0.0
+containerPort: 8080
+
+Replace with:
+
+replicas: {{ .Values.replicaCount }}
+image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+containerPort: {{ .Values.service.port }}
+
+Now these values come from values.yaml.
+
+
+---
+
+Step 6 — Update values.yaml
+
+This is where you define defaults for your payment chart.
+
+Example:
+
+replicaCount: 2
+
+image:
+  repository: myrepo/payment-service
+  tag: v1.0.0
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  hosts:
+    - host: payment.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+
+---
+
+Step 7 — Clean Up Templates
+
+Remove unnecessary hardcoded values and make templates generic.
+
+Example:
+
+Deployment.yaml → no hardcoded image tag
+
+Service.yaml → no fixed ports
+
+Ingress.yaml → read host/path from values.yaml
+
+
+This allows the chart to be reusable for multiple environments without editing templates.
+
+
+---
+
+Step 8 — Test the Chart Locally
+
+Run:
+
+helm install payment-test ./payment --dry-run --debug
+
+This will:
+
+Render your templates using values.yaml
+
+Show generated Kubernetes manifests
+
+Not actually deploy anything
+
+
+Check for errors and fix them.
+
+
+---
+
+Step 9 — Deploy the Chart to Kubernetes
+
+helm install payment ./payment
+
+This will:
+
+Create a release called payment
+
+Render templates with values.yaml
+
+Deploy payment microservice with Kubernetes
+
+
+Check deployment:
+
+kubectl get pods
+kubectl get svc
+kubectl get ingress
+
+
+---
+
+Step 10 — Override Values for Different Environments
+
+Instead of editing values.yaml directly, create environment-specific values files.
+
+Example:
+
+values-dev.yaml
+values-prod.yaml
+
+Run:
+
+helm install payment-dev ./payment -f values-dev.yaml
+helm install payment-prod ./payment -f values-prod.yaml
+
+This keeps your Helm chart reusable.
+
+
+---
+
+Step 11 — Upgrade / Rollback
+
+If you change the chart (image version, replica count, ports), run:
+
+helm upgrade payment ./payment -f values-prod.yaml
+
+Rollback if needed:
+
+helm rollback payment 1
+
+
+---
+
+Step 12 — Package the Chart (Optional)
+
+Package your chart for reuse:
+
+helm package ./payment
+
+This creates:
+
+payment-1.0.0.tgz
+
+You can then share this chart file or store it in a Helm repository.
+
+
+---
+
+Summary Table
+
+Step	Action
+
+1	Install Helm
+2	Create chart (helm create payment)
+3	Copy manifests to templates/
+4	Replace static values with template variables
+5	Update values.yaml
+6	Test chart locally (helm install --dry-run)
+7	Deploy chart (helm install)
+8	Override values for different environments
+9	Upgrade / rollback releases
+10	Package chart
 
  
