@@ -1,0 +1,48 @@
+# Today we will discuss the common 3 kubernetes issues where every Devops Engineer face:
+
+#1. Memory Leaking issue at Cluster level .
+#2. OOM error at Namespace Level
+#3. Upgrades.
+
+#1. what is Memory Leaking issue and how can we solve this issue ?
+
+Answer : Let's say you have a cluster of 100 GB and 100 CPU ram.
+
+now you have deployed a pod which requires 5gb and 5 cpu. But on one fine day, it is over utilising and exceeds its allocated capacity & it is causing the noisy neighbour issue. because of which, the other pods may not get enough cpu and memory.
+
+so because of this, we will divide the cluster into namespaces as per the teams which are developing those applications and will allocate the cpu and ram based on the performance benchmarking details provided by the development team. which we will call it as resource quota for each namespace.
+
+
+Now the blast radius got reduced from cluster level to Namespace level.
+
+2. What is OOM error at Namespace level and how to solve this issue ?
+
+Answer: Similar to leaking memory at Cluster level, now we have reduced the blast level to Namespace level.
+
+so inside of the namespace, let's say again on one fine day, if a single pod is utiliing the more memory and ram more than allocated, then it will cause the noisy neighbour issue in the namespace level, which will cause other pods to get crashed. This is the OOM(out of memory) scenario which we need to deal with now.
+
+OOM error has been shown as CrashloopBackoff issue in normal terms.
+
+so this error can be resolved by applying Resource limit on each pod.After applying Resource limit, most commonly pod will try to use its allocated memory. if it exceeds,then it will get crashed/killed.
+
+Then , you may ask for the solution for this one.
+
+so for this one, now we need to get the Thread dumps and heap dumps of the pod and share it to developer to analyse further. this is what devops engineer will do.
+
+Thread dumps and heap dumps terminology is important.
+
+3. Upgrade in Kubernetes Cluster ?
+
+Answer: Upgrades in common in K8S cluster for once in 3 to 6 months after release of each version.
+
+let's say a new version of K8S has been released from 1.29 to 1.30. Then we need to start upgrade process. But how to do that ?
+
+follow the below manual :
+
+1. Backup of Cluster
+2. Read the release version twice
+3. Start upgrade of Control Plane( First ETCD, second apiserver, third Scheduler )
+4. now upgrade the Data Plane(First we need to select which worked node you want to upgrade 
+ Then , you need to drain the node first and move the pods to another node. Later make that worked node as unschedulable. Now upgrade that kubelet in worker node.
+
+Later , make that node as schedulable again and join that worker node back to cluster. Similarly repeat the same for the remaining worked nodes).
