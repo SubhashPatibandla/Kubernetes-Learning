@@ -15,7 +15,11 @@ let's say you want to install nginx into one kubernetes cluster.
 
 now first will add the repository to helm by using below command :
 
-helm repo add bitnami.com
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+helm search repo bitnami --- You will get to know the available charts inside of bitnami
+
+helm search repo bitnami | grep nginx -- you can specifically search for nginx
 
 after adding the repo, will run the below command to install nginx :
 
@@ -25,13 +29,36 @@ in the above command, nginxv1 is the name of the package you wanted to name with
 
 bitnami/nginx is like repo/chart which you have downloaded/installed.
 
+kubectl get pods -- now you can see helm is installed in one of the pods
+
 -- that's how helm is useful similar to apt in linux.
+
+you can also search for prometheus :
+
+helm search repo bitnami | grep prometheus
+
+helm install prometheus bitnami/promethus
+
+We have seen the below 3 commands till now
+
+helm repo add
+helm search
+helm install
+helm uninstall nginxv1
+
+
 
 # then how the helm is useful at real world production level ?
 
 usually we may need different setups at different environments.
 
-so we can't write manifest files again and again for each microservice at every environment like dev, testing and prod.
+For that, we need to amend our application to the format of helm charts and we can deploy these helm charts in any environment we want/
+
+Then in that, how we can create helm chart for our application.
+
+Yes, we will see that in a bit.
+
+# so we can't write manifest files again and again for each microservice at every environment like dev, testing and prod.
 
 so in order to make those manifest files reusable, we can update the data of manifest files as variable. 
 
