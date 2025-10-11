@@ -41,7 +41,7 @@ spec:
     spec:
       containers:
       - name: game-2048
-        image: public.ecr.aws/aws-containers/2048:latest
+        image: public.ecr.aws/l6m2t8p7/docker-2048:latest
         ports:
         - containerPort: 80
 
@@ -53,7 +53,7 @@ metadata:
   name: service-2048
   namespace: game-2048
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
   - port: 80
     targetPort: 80
