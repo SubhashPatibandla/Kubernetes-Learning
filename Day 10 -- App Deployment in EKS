@@ -1,1 +1,160 @@
+##Create an EKS cluster with EC2 worker nodes, deploy the game-2048 app, and demonstrate the importance of the AWS ALB Ingress Controller.
+
+
+🧰 Step 1: Create your cluster (EC2 worker nodes)
+
+eksctl create cluster \
+--name game-2048-demo \
+--region ap-south-1 \
+--nodegroup-name worker-nodes \
+--node-type t3.medium \
+--nodes 2
+
+
+Update kubeconfig:
+
+aws eks update-kubeconfig --name game-2048-demo --region ap-south-1
+
+
+Create namespace:
+
+kubectl create namespace game-2048
+
+📝 Step 2: Create a single file game-2048.yaml
+
+Save this file locally:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: game-2048
+  namespace: game-2048
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: game-2048
+  template:
+    metadata:
+      labels:
+        app: game-2048
+    spec:
+      containers:
+      - name: game-2048
+        image: public.ecr.aws/aws-containers/2048:latest
+        ports:
+        - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-2048
+  namespace: game-2048
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: game-2048
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-2048
+  namespace: game-2048
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service-2048
+            port:
+              number: 80
+
+⚡ Step 3: Apply the YAML
+kubectl apply -f game-2048.yaml
+
+
+Now check:
+
+kubectl get pods,svc,ingress -n game-2048
+
+
+You’ll see:
+
+NAME                         READY   STATUS    AGE
+pod/game-2048-xxxx           1/1     Running   1m
+
+NAME                TYPE        CLUSTER-IP      PORT(S)   AGE
+service-2048        ClusterIP   10.100.xx.xx    80/TCP    1m
+
+NAME                CLASS    HOSTS   ADDRESS   PORTS   AGE
+ingress-2048        <none>   *       <pending> 80      1m
+
+
+🧠 Step 4: Install AWS Load Balancer Controller
+
+Now add the missing piece.
+
+a. Associate OIDC provider
+eksctl utils associate-iam-oidc-provider --cluster game-2048-demo --approve
+
+b. Create IAM policy
+curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/main/docs/install/iam_policy.json
+
+aws iam create-policy \
+  --policy-name AWSLoadBalancerControllerIAMPolicy \
+  --policy-document file://iam-policy.json
+
+c. Create IAM service account
+eksctl create iamserviceaccount \
+  --cluster game-2048-demo \
+  --namespace kube-system \
+  --name aws-load-balancer-controller \
+  --attach-policy-arn arn:aws:iam::<your-account-id>:policy/AWSLoadBalancerControllerIAMPolicy \
+  --approve
+
+d. Install the ALB Controller via Helm
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=game-2048-demo \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller
+
+✅ Step 5: Watch Ingress Come Alive
+
+Now run:
+
+kubectl get ingress -n game-2048
+
+
+After 1–2 minutes, you’ll see:
+
+NAME            CLASS    HOSTS   ADDRESS                                         PORTS   AGE
+ingress-2048    alb      *       k8s-game2048-1234567890.ap-south-1.elb.amazonaws.com   80      3m
+
+
+🎉 Now your Ingress got an ALB DNS name — and the app is publicly accessible at that URL.
+
+🌐 Step 6: Open the Game
+
+Paste the ALB DNS name in your browser — you’ll see the 2048 game UI appear.
+
+
+🧹 Cleanup (when done)
+eksctl delete cluster --name game-2048-demo --region ap-south-1
 
